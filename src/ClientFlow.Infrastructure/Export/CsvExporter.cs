@@ -45,9 +45,18 @@ public class CsvExporter : ICsvExporter
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
-    private static string EscapeCsv(string value)
+    public static string EscapeCsv(string value)
     {
         if (string.IsNullOrEmpty(value)) return "\"\"";
+
+        // Neutralize CSV Formula Injection (CWE-1236)
+        // If the cell begins with formula execution characters (=, +, -, @, tab, CR), prepend a single quote
+        char firstChar = value[0];
+        if (firstChar is '=' or '+' or '-' or '@' or '\t' or '\r')
+        {
+            value = "'" + value;
+        }
+
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
         {
             return $"\"{value.Replace("\"", "\"\"")}\"";

@@ -10,7 +10,7 @@ public class InvoiceItem
     public string Description { get; private set; } = string.Empty;
     public decimal Quantity { get; private set; }
     public decimal UnitPrice { get; private set; }
-    public decimal LineTotal => Math.Round(Quantity * UnitPrice, 2);
+    public decimal LineTotal => Math.Round(Quantity * UnitPrice, 2, MidpointRounding.AwayFromZero);
 
     private InvoiceItem() { }
 
@@ -102,8 +102,8 @@ public class Invoice
 
     public void RecalculateTotals()
     {
-        SubTotal = Math.Round(_items.Sum(i => i.LineTotal), 2);
-        TaxAmount = Math.Round(SubTotal * (TaxRatePercentage / 100m), 2);
+        SubTotal = Math.Round(_items.Sum(i => i.LineTotal), 2, MidpointRounding.AwayFromZero);
+        TaxAmount = Math.Round(SubTotal * (TaxRatePercentage / 100m), 2, MidpointRounding.AwayFromZero);
         TotalAmount = SubTotal + TaxAmount;
     }
 

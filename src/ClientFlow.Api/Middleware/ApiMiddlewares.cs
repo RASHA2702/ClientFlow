@@ -90,6 +90,7 @@ public class GlobalExceptionHandlerMiddleware
 
         var problem = new ProblemDetails
         {
+            Type = $"https://datatracker.ietf.org/doc/html/rfc9457#section-3",
             Status = statusCode,
             Title = title,
             Detail = detail,

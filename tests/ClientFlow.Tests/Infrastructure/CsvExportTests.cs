@@ -80,4 +80,49 @@ public class CsvExportTests
         Assert.IsTrue(csv.Contains("12000"));
         Assert.IsTrue(csv.Contains("Paid"));
     }
+
+    [TestMethod]
+    [DataRow("=SUM(A1:A10)", "'=SUM(A1:A10)")]
+    [DataRow("+cmd|' /C calc'!A0", "'+cmd|' /C calc'!A0")]
+    [DataRow("-123", "'-123")]
+    [DataRow("@SUM(A1)", "'@SUM(A1)")]
+    [DataRow("@SUM(1,2)", "\"'@SUM(1,2)\"")]
+    [DataRow("\tmalicious", "'\tmalicious")]
+    public void EscapeCsv_SanitizesFormulaInjectionPrefixes_PrependQuote(string input, string expected)
+    {
+        var sanitized = CsvExporter.EscapeCsv(input);
+        Assert.AreEqual(expected, sanitized);
+    }
+
+    [TestMethod]
+    public void ExportTimeEntries_WithFormulaInjectionPayload_NeutralizesPayload()
+    {
+        var exporter = new CsvExporter();
+        var entries = new List<TimeEntryDto>
+        {
+            new TimeEntryDto(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                "=HYPERLINK(\"http://evil.com\")",
+                Guid.NewGuid(),
+                "Apex FinTech",
+                "usr_1",
+                "Rashad",
+                new DateTime(2026, 10, 27),
+                4.0m,
+                true,
+                "@dangerous_command",
+                false,
+                null,
+                DateTime.UtcNow
+            )
+        };
+
+        var bytes = exporter.ExportTimeEntries(entries);
+        var csv = Encoding.UTF8.GetString(bytes);
+
+        // Verify prefixes are prepended with single-quote to prevent Excel / Sheets formula execution
+        Assert.IsTrue(csv.Contains("\"'=HYPERLINK(\"\"http://evil.com\"\")\""));
+        Assert.IsTrue(csv.Contains("'@dangerous_command"));
+    }
 }

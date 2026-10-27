@@ -76,4 +76,30 @@ public class TimeAndInvoiceTests
         // Should throw
         invoice.MarkCancelled();
     }
+
+    [TestMethod]
+    public void Invoice_CommercialRoundingAwayFromZero_RoundsHalfUp()
+    {
+        // Arrange: 1.01 quantity * $2.50 unit price = 2.525.
+        // Banker's rounding (ToEven) produces 2.52.
+        // Commercial rounding (AwayFromZero) produces 2.53.
+        var invoice = Invoice.Create(Guid.NewGuid(), null, "INV-ROUND-1", DateTime.UtcNow, DateTime.UtcNow.AddDays(7));
+        invoice.AddItem("Precision Item", 1.01m, 2.50m);
+
+        Assert.AreEqual(2.53m, invoice.Items.First().LineTotal);
+        Assert.AreEqual(2.53m, invoice.SubTotal);
+    }
+
+    [TestMethod]
+    public void Invoice_TaxCalculation_UsesCommercialRoundingAwayFromZero()
+    {
+        // Subtotal = $10.05, TaxRate = 5% => 10.05 * 0.05 = 0.5025 => 0.50.
+        // Subtotal = $10.50, TaxRate = 5% => 10.50 * 0.05 = 0.525 => With AwayFromZero: 0.53
+        var invoice = Invoice.Create(Guid.NewGuid(), null, "INV-ROUND-2", DateTime.UtcNow, DateTime.UtcNow.AddDays(7), 5.0m);
+        invoice.AddItem("Consulting", 1m, 10.50m);
+
+        Assert.AreEqual(10.50m, invoice.SubTotal);
+        Assert.AreEqual(0.53m, invoice.TaxAmount);
+        Assert.AreEqual(11.03m, invoice.TotalAmount);
+    }
 }

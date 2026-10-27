@@ -1,7 +1,7 @@
 # ClientFlow — Client & Project Operations Platform
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
-[![Tests](https://img.shields.io/badge/tests-20%20passed-success)](#)
+[![Tests](https://img.shields.io/badge/tests-29%20passed-success)](#)
 [![Framework](https://img.shields.io/badge/.NET-8.0%20LTS-purple)](#)
 [![Frontend](https://img.shields.io/badge/Angular-16.1-red)](#)
 [![Database](https://img.shields.io/badge/SQL%20Server-LocalDB%20%2F%202022-blue)](#)
@@ -12,18 +12,18 @@ An enterprise-grade, full-stack software operations platform designed for indepe
 ---
 
 ## 1. Business Problem
-Small and mid-sized software agencies, boutique consultancies, and remote engineering contractors lose up to 15% of billable revenue due to fragmented tooling:
+Small and mid-sized software agencies, boutique consultancies, and remote engineering contractors lose billable revenue due to fragmented tooling:
 - Client contacts, contract scopes, and hourly rates live in disconnected spreadsheets.
 - Billable time entries are entered days late, resulting in disputes and unbilled work.
 - Invoicing requires manual reconciliation between task trackers, git commit logs, and bank accounts.
 - Clients lack transparent visibility into project milestones, leading to scope creep.
 
-**ClientFlow** unifies client management, project workspace delivery, task Kanban tracking, billable timesheets, and multi-currency invoicing into a unified, auditable platform.
+**ClientFlow** unifies client management, project workspace delivery, task Kanban tracking, billable timesheets, and multi-currency invoice denomination into a single, auditable platform.
 
 ---
 
 ## 2. Intended Users
-- **Solo Software Consultants & Technical Founders:** Managing multiple international client contracts concurrently.
+- **Solo Software Consultants & Technical Founders:** Managing multiple international client contracts concurrently across discrete currency denominations.
 - **Digital Agencies & Dev Shops (5–50 engineers):** Needing centralized workload distribution, rate governance, and invoice generation.
 - **Professional Services Teams:** Requiring transparent time logs, deliverable sign-offs, and accurate invoicing.
 
@@ -31,14 +31,14 @@ Small and mid-sized software agencies, boutique consultancies, and remote engine
 
 ## 3. Major Capabilities
 
-- **Client & Contract Governance:** Full CRM for international accounts, billing contacts, addresses, and currency locking (USD, GBP, EUR, AUD, CAD).
+- **Client & Contract Governance:** Full CRM for international accounts, billing contacts, addresses, and multi-currency invoice denomination (USD, GBP, EUR, AUD, CAD).
 - **Project Workspaces & Milestones:** Budget tracking, hourly rate configuration, burn-rate telemetry, and deliverable sign-offs.
 - **Workflow Kanban Board:** 5-state lifecycle (`Backlog` → `Todo` → `InProgress` → `Review` → `Done`) with priority categorization (`Urgent`, `High`, `Medium`, `Low`).
 - **Precision Time Logging:** Task-linked billable/non-billable hours tracking with validation guards (preventing entries >24h/day or modifications to invoiced time).
-- **Automated Invoicing Engine:** Generates sequential invoices (`INV-YYYY-XXXX`), line-item calculations, configurable tax rates, and state safeguards (protecting settled invoices from accidental mutation).
-- **RFC 4180 CSV Reporting:** Instant export of timesheets and billing ledgers for accounting import.
-- **Audit Logging:** Immutable audit trail recording every state change, deletion, and financial settlement with actor attribution.
-- **Observability:** Distributed correlation IDs (`X-Correlation-ID`) across every request and RFC 7807 `ProblemDetails` error structures.
+- **Automated Invoicing Engine:** Generates sequential invoices (`INV-YYYY-XXXX`), line-item calculations using commercial `AwayFromZero` midpoint rounding, configurable tax rates, and state safeguards (protecting settled invoices from accidental mutation).
+- **Sanitized CSV Reporting (RFC 4180 & CWE-1236 Defense):** Export timesheets and billing ledgers with formula injection neutralization (`=`, `+`, `-`, `@`, tab, CR prefix neutralization).
+- **Audit Logging:** Immutable audit trail recording state changes, deletions, and financial settlements with actor attribution.
+- **Observability:** Distributed correlation IDs (`X-Correlation-ID`) across every request and RFC 9457 `ProblemDetails` error structures.
 
 ---
 
@@ -73,7 +73,7 @@ flowchart TD
     subgraph Infra ["Infrastructure Layer (Persistence & Adapters)"]
         Store["InMemoryDataStore (Concurrent Thread-Safe) / SQL Server LocalDB"]
         Repos["ClientRepository, ProjectRepository, TaskRepository, InvoiceRepository"]
-        Csv["CsvExporter (RFC 4180 Escaped)"]
+        Csv["CsvExporter (RFC 4180 & CWE-1236 Escaped)"]
         Seeder["SampleDataSeeder (Seed Accounts)"]
     end
 
@@ -98,7 +98,7 @@ flowchart TD
 | **Database** | **SQL Server 2025 LocalDB** (`(localdb)\MSSQLLocalDB`) / In-Memory Concurrent Store with enterprise seeding. |
 | **Testing** | **MSTest 3.1**, **Moq 4.18**, automated business rule verification, unit and service orchestration tests. |
 | **DevOps & Containers** | **Docker**, **Docker Compose**, **GitHub Actions CI Pipeline** (automated restore, build, and test execution). |
-| **Standards** | **RFC 7807 / 9110** (ProblemDetails), **RFC 4180** (CSV), **ISO 8601** (UTC Timestamps). |
+| **Standards** | **RFC 9457 / RFC 9110** (ProblemDetails), **RFC 4180** (CSV) with **CWE-1236 Defense**, **ISO 8601** (UTC Timestamps). |
 
 ---
 
@@ -110,9 +110,12 @@ flowchart TD
 2. **Dual-Mode Persistence (Zero-Config In-Memory + SQL Server LocalDB):**
    - *Trade-off:* Requires abstraction interfaces (`IRepositories`).
    - *Advantage:* Evaluators on macOS, Linux, or constrained Windows machines can run the full platform out of the box in under 5 seconds without database installation friction.
-3. **Structured RFC 7807 Error Responses:**
-   - *Trade-off:* Centralized middleware required to catch and translate typed domain exceptions.
-   - *Advantage:* Frontend clients never receive unstructured 500 HTML dumps; errors are predictably parsed with field-level highlights.
+3. **Structured RFC 9457 Error Responses:**
+   - *Trade-off:* Centralized middleware required to catch and translate typed domain exceptions into standard problem details.
+   - *Advantage:* Frontend clients never receive unstructured HTML dumps; errors are predictably parsed with field-level highlights and RFC 9457 type URIs.
+4. **Commercial Rounding (`MidpointRounding.AwayFromZero`):**
+   - *Trade-off:* Differs from default .NET Banker's rounding (`ToEven`).
+   - *Advantage:* Eliminates fractional penny discrepancies and complies with standard commercial invoicing conventions.
 
 ---
 
@@ -136,7 +139,7 @@ cd ClientFlow
 ```powershell
 dotnet test tests/ClientFlow.Tests/ClientFlow.Tests.csproj
 ```
-*(All 20 unit and service tests will run and pass in under 1 second).*
+*(All 29 unit and service tests will run and pass in ~0.5 seconds).*
 
 ### Step 3: Run the Backend Web API
 ```powershell
@@ -166,15 +169,15 @@ The test suite runs against all critical business rules:
 Test run for ClientFlow.Tests.dll (.NETCoreApp,Version=v8.0)
 A total of 1 test files matched the specified pattern.
 
-Passed!  - Failed: 0, Passed: 20, Skipped: 0, Total: 20, Duration: 633 ms - ClientFlow.Tests.dll (net8.0)
+Passed!  - Failed: 0, Passed: 29, Skipped: 0, Total: 29, Duration: 501 ms - ClientFlow.Tests.dll (net8.0)
 ```
 
 ### Test Coverage Highlights:
 - `ClientDomainTests`: Email RFC compliance, entity creation, update constraints.
 - `ProjectAndMilestoneTests`: Budget non-negativity, milestone status progression.
-- `TimeAndInvoiceTests`: Max 24-hour daily guard, invoice line-item subtotal + tax formula verification, protection against canceling paid invoices.
+- `TimeAndInvoiceTests`: Max 24-hour daily guard, invoice line-item subtotal + tax formula verification, commercial rounding (`AwayFromZero`) half-cent verification, protection against canceling paid invoices.
 - `ClientServiceTests`: Moq verification of audit logging and active project deletion guard.
-- `CsvExportTests`: RFC 4180 escape verification for commas and quotes.
+- `CsvExportTests`: RFC 4180 format compliance and CWE-1236 formula injection neutralization (`=`, `+`, `-`, `@`, tab).
 
 ---
 
@@ -230,9 +233,10 @@ Content-Type: application/json
 }
 ```
 
-### Error Response Example (RFC 7807 ProblemDetails)
+### Error Response Example (RFC 9457 ProblemDetails)
 ```json
 {
+  "type": "https://datatracker.ietf.org/doc/html/rfc9457#section-3",
   "status": 400,
   "title": "Business Rule Validation Failed",
   "detail": "A client with email 'billing@acmecorp.com' already exists.",
@@ -244,6 +248,7 @@ Content-Type: application/json
 ---
 
 ## 11. Security Considerations
+- **CWE-1236 Formula Injection Neutralization:** CSV exports automatically prepend a single quote `'` to cells beginning with formula operators (`=`, `+`, `-`, `@`, `\t`, `\r`) to prevent spreadsheet arbitrary formula execution.
 - **SQL Injection Prevention:** Strictly parameterized SQL commands; zero string concatenation.
 - **XSS Protection:** Angular automatic context-aware HTML escaping and data sanitization.
 - **CORS Whitelist:** Explicit client origin policies with restricted exposed headers.
@@ -252,7 +257,9 @@ Content-Type: application/json
 ---
 
 ## 12. Known Limitations & Roadmap
-- **Current Implementation:** Authentication defaults to a local administrative user context for development. OpenIddict / JWT authentication integration is in progress.
+- **Current Implementation:**
+  - Multi-currency support handles denominated invoicing in USD, GBP, EUR, AUD, CAD without dynamic automated FX rate conversion at runtime.
+  - Authentication defaults to a local administrative user context for local evaluation.
 - **Planned Enhancements:**
   - OpenIddict / ASP.NET Core Identity with JWT bearer token authentication and refresh token rotation.
   - Multi-tenant database schema isolation (separate schemas per client organization).
