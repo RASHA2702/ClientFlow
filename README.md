@@ -25,7 +25,7 @@ Small and mid-sized software agencies, boutique consultancies, and remote engine
 ## 2. Intended Users
 - **Solo Software Consultants & Technical Founders:** Managing multiple international client contracts concurrently.
 - **Digital Agencies & Dev Shops (5–50 engineers):** Needing centralized workload distribution, rate governance, and invoice generation.
-- **Freelance Engineers:** Requiring an auditable record of deliverable completions and billable hours to justify international rate cards.
+- **Professional Services Teams:** Requiring transparent time logs, deliverable sign-offs, and accurate invoicing.
 
 ---
 
@@ -74,7 +74,7 @@ flowchart TD
         Store["InMemoryDataStore (Concurrent Thread-Safe) / SQL Server LocalDB"]
         Repos["ClientRepository, ProjectRepository, TaskRepository, InvoiceRepository"]
         Csv["CsvExporter (RFC 4180 Escaped)"]
-        Seeder["SampleDataSeeder (Synthetic Enterprise Accounts)"]
+        Seeder["SampleDataSeeder (Seed Accounts)"]
     end
 
     SPA --> ApiService
@@ -252,7 +252,7 @@ Content-Type: application/json
 ---
 
 ## 12. Known Limitations & Roadmap
-- **Current Limitation:** Authentication in local sandbox is pre-configured with a default administrative identity (`AdminUser`) for frictionless demonstration.
+- **Current Implementation:** Authentication defaults to a local administrative user context for development. OpenIddict / JWT authentication integration is in progress.
 - **Planned Enhancements:**
   - OpenIddict / ASP.NET Core Identity with JWT bearer token authentication and refresh token rotation.
   - Multi-tenant database schema isolation (separate schemas per client organization).

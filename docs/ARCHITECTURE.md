@@ -32,7 +32,7 @@ flowchart TD
         DataStore["InMemoryDataStore (Concurrent Thread-Safe) / SQL Server LocalDB"]
         RepoImpl["ClientRepository, ProjectRepository, InvoiceRepository..."]
         Exporter["CsvExporter (RFC 4180 Escaped)"]
-        Seeder["SampleDataSeeder (Synthetic Enterprise Accounts)"]
+        Seeder["SampleDataSeeder (Seed Accounts)"]
     end
 
     UI --> API
@@ -60,7 +60,7 @@ flowchart TD
 
 ### Infrastructure Layer (`ClientFlow.Infrastructure`)
 - **Dual Persistence Capability:**
-  1. High-speed concurrent in-memory store for instant zero-dependency test execution and local sandbox development.
+  1. High-speed concurrent in-memory store for instant zero-dependency test execution and local development.
   2. SQL Server LocalDB / relational mapping with parameterized queries and transactional boundaries.
 - **Exporting Engine:** Low-overhead streaming CSV exporter with RFC 4180 character escaping for billing reconciliations.
 

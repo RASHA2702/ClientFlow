@@ -10,7 +10,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
-        // Singleton in-memory datastore with synthetic enterprise seed data
+        // In-memory datastore with development seed data
         services.AddSingleton<InMemoryDataStore>();
 
         // Repositories

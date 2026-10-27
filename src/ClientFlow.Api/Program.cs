@@ -33,7 +33,7 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// 5. Seed synthetic enterprise data for local demonstration
+// 5. Seed sample development data
 using (var scope = app.Services.CreateScope())
 {
     var store = scope.ServiceProvider.GetRequiredService<InMemoryDataStore>();
