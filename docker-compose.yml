@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  clientflow-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clientflow-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-ClientFlow_StrongPass123!}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  clientflow-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: clientflow-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=clientflow-db,1433;Database=ClientFlowDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-ClientFlow_StrongPass123!};TrustServerCertificate=True;
+    ports:
+      - "5000:5000"
+    depends_on:
+      - clientflow-db
+
+  clientflow-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: clientflow-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - clientflow-api
+
+volumes:
+  sqlserver-data:

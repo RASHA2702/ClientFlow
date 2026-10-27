@@ -1,0 +1,51 @@
+name: ClientFlow CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend-build-and-test:
+    name: .NET Core Build & Automated Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore ClientFlow.slnx
+
+      - name: Build Solution
+        run: dotnet build ClientFlow.slnx --configuration Release --no-restore
+
+      - name: Run Unit & Service Tests
+        run: dotnet test tests/ClientFlow.Tests/ClientFlow.Tests.csproj --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+
+  frontend-build:
+    name: Angular 16 Production Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Angular Application (Production)
+        working-directory: frontend
+        run: npm run build -- --configuration production

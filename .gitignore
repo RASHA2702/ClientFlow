@@ -1,0 +1,19 @@
+## .NET Core
+bin/
+obj/
+*.user
+*.suo
+.vs/
+ClientFlow.sln.DotSettings.user
+
+## Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log
+yarn-error.log
+
+## Environment & Secrets
+.env
+*.local.json
+appsettings.Production.json

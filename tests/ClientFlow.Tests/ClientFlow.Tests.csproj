@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ClientFlow.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0-preview-20220707-01" />
+    <PackageReference Include="Moq" Version="4.18.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ClientFlow.Domain\ClientFlow.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ClientFlow.Application\ClientFlow.Application.csproj" />
+    <ProjectReference Include="..\..\src\ClientFlow.Infrastructure\ClientFlow.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

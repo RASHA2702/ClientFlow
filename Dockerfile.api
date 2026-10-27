@@ -1,0 +1,23 @@
+# Backend API Dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy project files
+COPY ["src/ClientFlow.Domain/ClientFlow.Domain.csproj", "src/ClientFlow.Domain/"]
+COPY ["src/ClientFlow.Application/ClientFlow.Application.csproj", "src/ClientFlow.Application/"]
+COPY ["src/ClientFlow.Infrastructure/ClientFlow.Infrastructure.csproj", "src/ClientFlow.Infrastructure/"]
+COPY ["src/ClientFlow.Api/ClientFlow.Api.csproj", "src/ClientFlow.Api/"]
+COPY ["ClientFlow.slnx", "./"]
+
+RUN dotnet restore "src/ClientFlow.Api/ClientFlow.Api.csproj"
+
+COPY . .
+WORKDIR "/src/src/ClientFlow.Api"
+RUN dotnet publish "ClientFlow.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+EXPOSE 5000
+ENV ASPNETCORE_URLS=http://+:5000
+ENTRYPOINT ["dotnet", "ClientFlow.Api.dll"]

@@ -1,0 +1,713 @@
+<div class="app-layout">
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="brand-section">
+      <div class="logo-mark">CF</div>
+      <div class="brand-text">
+        <span class="brand-name">ClientFlow</span>
+        <span class="brand-badge">SaaS Ops</span>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <span class="status-indicator"></span>
+      <span class="status-label">ASP.NET Core 8 Web API + SQL Server</span>
+    </div>
+
+    <div class="user-profile">
+      <div class="avatar">R</div>
+      <div class="user-info">
+        <span class="user-name">Rashad</span>
+        <span class="user-role">Full-Stack Engineer</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-body">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <nav class="nav-menu">
+        <button class="nav-item" [class.active]="activeTab === 'dashboard'" (click)="activeTab = 'dashboard'; loadDashboard()">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </button>
+        <button class="nav-item" [class.active]="activeTab === 'clients'" (click)="activeTab = 'clients'; loadClients()">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Clients</span>
+        </button>
+        <button class="nav-item" [class.active]="activeTab === 'projects'" (click)="activeTab = 'projects'; loadProjects()">
+          <span class="nav-icon">📁</span>
+          <span class="nav-text">Projects</span>
+        </button>
+        <button class="nav-item" [class.active]="activeTab === 'tasks'" (click)="activeTab = 'tasks'; loadProjectTasks()">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">Task Kanban</span>
+        </button>
+        <button class="nav-item" [class.active]="activeTab === 'time'" (click)="activeTab = 'time'; loadTimeReport()">
+          <span class="nav-icon">⏱️</span>
+          <span class="nav-text">Time Tracker</span>
+        </button>
+        <button class="nav-item" [class.active]="activeTab === 'invoices'" (click)="activeTab = 'invoices'; loadInvoices()">
+          <span class="nav-icon">💳</span>
+          <span class="nav-text">Invoicing</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sys-info">
+          <span>Clean Architecture</span>
+          <small>NUnit • Moq • Angular 16</small>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-container">
+      <!-- Toast Alert Notification -->
+      <div *ngIf="toastMessage" class="toast-alert" [ngClass]="'toast-' + toastType">
+        <span class="toast-icon">{{ toastType === 'error' ? '⚠️' : '✓' }}</span>
+        <span>{{ toastMessage }}</span>
+      </div>
+
+      <!-- TAB 1: DASHBOARD -->
+      <section *ngIf="activeTab === 'dashboard'" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h2>Operations Overview</h2>
+            <p class="subtitle">Real-time telemetry across client contracts, billable hours, and project milestones.</p>
+          </div>
+          <button class="btn btn-outline" (click)="loadDashboard()">🔄 Refresh KPIs</button>
+        </div>
+
+        <div *ngIf="kpis" class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-title">Active Clients</span>
+            <span class="kpi-value">{{ kpis.totalActiveClients }}</span>
+            <span class="kpi-sub">International B2B accounts</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Active Projects</span>
+            <span class="kpi-value">{{ kpis.totalActiveProjects }}</span>
+            <span class="kpi-sub">Under active sprint delivery</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Open Tasks</span>
+            <span class="kpi-value text-amber">{{ kpis.openTasksCount }}</span>
+            <span class="kpi-sub">Backlog, Todo & In-Progress</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Hours Logged (Month)</span>
+            <span class="kpi-value text-indigo">{{ kpis.totalHoursLoggedThisMonth | number:'1.1-1' }} hrs</span>
+            <span class="kpi-sub">Billable time tracked</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Revenue Collected</span>
+            <span class="kpi-value text-emerald">${{ kpis.totalRevenueCollected | number:'1.2-2' }}</span>
+            <span class="kpi-sub">Settled invoices</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Outstanding Invoices</span>
+            <span class="kpi-value text-rose">${{ kpis.totalOutstandingInvoicesAmount | number:'1.2-2' }}</span>
+            <span class="kpi-sub">Sent / Awaiting payment</span>
+          </div>
+        </div>
+
+        <!-- Dashboard Split Columns -->
+        <div *ngIf="kpis" class="split-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Active Deliverables</h3>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Client</th>
+                    <th>Progress</th>
+                    <th>Budget</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let p of kpis.recentProjects">
+                    <td><strong>{{ p.name }}</strong></td>
+                    <td>{{ p.clientName }}</td>
+                    <td>
+                      <div class="progress-bar-container">
+                        <div class="progress-bar" [style.width.%]="p.taskCount > 0 ? (p.completedTaskCount / p.taskCount) * 100 : 0"></div>
+                      </div>
+                      <small>{{ p.completedTaskCount }}/{{ p.taskCount }} tasks</small>
+                    </td>
+                    <td>${{ p.budget | number:'1.0-0' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>High Priority & Urgent Tasks</h3>
+            </div>
+            <div class="urgent-task-list">
+              <div *ngFor="let t of kpis.urgentTasks" class="urgent-task-card">
+                <div class="task-badge badge-urgent">{{ t.priority }}</div>
+                <div class="task-info">
+                  <div class="task-title">{{ t.title }}</div>
+                  <div class="task-meta">Assigned: {{ t.assignedTo || 'Unassigned' }} • {{ t.estimatedHours }}h estimated</div>
+                </div>
+                <span class="status-pill status-{{ t.status.toLowerCase() }}">{{ t.status }}</span>
+              </div>
+              <div *ngIf="kpis.urgentTasks.length === 0" class="empty-state">
+                No urgent tasks pending.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: CLIENTS -->
+      <section *ngIf="activeTab === 'clients'" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h2>Client Accounts</h2>
+            <p class="subtitle">Manage international client contacts, contracts, and billing currencies.</p>
+          </div>
+          <button class="btn btn-primary" (click)="showClientModal = true">+ New Client</button>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" [(ngModel)]="clientSearch" (input)="loadClients()" placeholder="Search by name, company, or email..." class="search-input" />
+          <select [(ngModel)]="clientStatusFilter" (change)="loadClients()" class="select-input">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="Lead">Lead</option>
+          </select>
+        </div>
+
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Client / Company</th>
+                  <th>Contact Email</th>
+                  <th>Currency</th>
+                  <th>Status</th>
+                  <th>Active Projects</th>
+                  <th>Total Billed</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of clients">
+                  <td>
+                    <div class="cell-primary">{{ c.name }}</div>
+                    <div class="cell-sub">{{ c.companyName }}</div>
+                  </td>
+                  <td>{{ c.email }}</td>
+                  <td><span class="currency-tag">{{ c.currency }}</span></td>
+                  <td><span class="status-pill status-{{ c.status.toLowerCase() }}">{{ c.status }}</span></td>
+                  <td>{{ c.activeProjectsCount }} projects</td>
+                  <td><strong>{{ c.totalBilled | number:'1.2-2' }} {{ c.currency }}</strong></td>
+                  <td>
+                    <button class="btn btn-sm btn-danger" (click)="deleteClient(c)">Delete</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: PROJECTS -->
+      <section *ngIf="activeTab === 'projects'" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h2>Project Workspaces</h2>
+            <p class="subtitle">Track budget consumption, milestones, and deliverable lifecycles.</p>
+          </div>
+          <button class="btn btn-primary" (click)="showProjectModal = true">+ New Project</button>
+        </div>
+
+        <div class="project-grid">
+          <div *ngFor="let p of projects" class="project-card">
+            <div class="project-card-header">
+              <span class="status-pill status-{{ p.status.toLowerCase() }}">{{ p.status }}</span>
+              <span class="rate-badge">${{ p.hourlyRate }}/hr</span>
+            </div>
+            <h3 class="project-title">{{ p.name }}</h3>
+            <p class="project-client">Client: <strong>{{ p.clientName }}</strong></p>
+            <p class="project-desc">{{ p.description || 'No description provided.' }}</p>
+
+            <div class="project-metrics">
+              <div class="metric-item">
+                <span>Budget</span>
+                <strong>${{ p.budget | number:'1.0-0' }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>Hours Logged</span>
+                <strong>{{ p.totalHoursLogged | number:'1.1-1' }}h</strong>
+              </div>
+              <div class="metric-item">
+                <span>Cost Estimated</span>
+                <strong>${{ p.totalCostEstimated | number:'1.0-0' }}</strong>
+              </div>
+            </div>
+
+            <div class="project-footer">
+              <button class="btn btn-sm btn-outline" (click)="activeTab = 'tasks'; selectProjectForTasks(p.id)">
+                View Tasks ({{ p.taskCount }})
+              </button>
+              <button class="btn btn-sm btn-outline" (click)="activeTab = 'time'; selectProjectForTasks(p.id)">
+                Timesheets
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TASKS KANBAN -->
+      <section *ngIf="activeTab === 'tasks'" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h2>Task Kanban Board</h2>
+            <p class="subtitle">Workflow visualization across Backlog, Todo, InProgress, Review, and Done.</p>
+          </div>
+          <div class="header-actions">
+            <select [(ngModel)]="selectedProjectId" (change)="loadProjectTasks()" class="select-input">
+              <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+            </select>
+            <button class="btn btn-primary" (click)="showTaskModal = true">+ New Task</button>
+          </div>
+        </div>
+
+        <div class="kanban-board">
+          <!-- Backlog -->
+          <div class="kanban-col">
+            <div class="col-header">
+              <span class="col-title">Backlog</span>
+              <span class="col-count">{{ getTasksByColumn('Backlog').length }}</span>
+            </div>
+            <div class="col-cards">
+              <div *ngFor="let t of getTasksByColumn('Backlog')" class="kanban-card">
+                <span class="task-badge badge-{{ t.priority.toLowerCase() }}">{{ t.priority }}</span>
+                <h4 class="card-title">{{ t.title }}</h4>
+                <p class="card-desc">{{ t.description }}</p>
+                <div class="card-meta">
+                  <small>Est: {{ t.estimatedHours }}h</small>
+                  <button class="btn-link" (click)="updateTaskStatus(t, 'Todo')">Move to Todo →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Todo -->
+          <div class="kanban-col">
+            <div class="col-header">
+              <span class="col-title">To Do</span>
+              <span class="col-count">{{ getTasksByColumn('Todo').length }}</span>
+            </div>
+            <div class="col-cards">
+              <div *ngFor="let t of getTasksByColumn('Todo')" class="kanban-card">
+                <span class="task-badge badge-{{ t.priority.toLowerCase() }}">{{ t.priority }}</span>
+                <h4 class="card-title">{{ t.title }}</h4>
+                <p class="card-desc">{{ t.description }}</p>
+                <div class="card-meta">
+                  <small>{{ t.assignedTo }} • {{ t.estimatedHours }}h</small>
+                  <button class="btn-link" (click)="updateTaskStatus(t, 'InProgress')">Start →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- InProgress -->
+          <div class="kanban-col">
+            <div class="col-header">
+              <span class="col-title">In Progress</span>
+              <span class="col-count">{{ getTasksByColumn('InProgress').length }}</span>
+            </div>
+            <div class="col-cards">
+              <div *ngFor="let t of getTasksByColumn('InProgress')" class="kanban-card border-progress">
+                <span class="task-badge badge-{{ t.priority.toLowerCase() }}">{{ t.priority }}</span>
+                <h4 class="card-title">{{ t.title }}</h4>
+                <p class="card-desc">{{ t.description }}</p>
+                <div class="card-meta">
+                  <small>{{ t.assignedTo }} • Logged: {{ t.loggedHours }}h</small>
+                  <button class="btn-link" (click)="updateTaskStatus(t, 'Review')">Submit Review →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Review -->
+          <div class="kanban-col">
+            <div class="col-header">
+              <span class="col-title">Review</span>
+              <span class="col-count">{{ getTasksByColumn('Review').length }}</span>
+            </div>
+            <div class="col-cards">
+              <div *ngFor="let t of getTasksByColumn('Review')" class="kanban-card">
+                <span class="task-badge badge-{{ t.priority.toLowerCase() }}">{{ t.priority }}</span>
+                <h4 class="card-title">{{ t.title }}</h4>
+                <p class="card-desc">{{ t.description }}</p>
+                <div class="card-meta">
+                  <button class="btn-link text-emerald" (click)="updateTaskStatus(t, 'Done')">Approve (Done) ✓</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Done -->
+          <div class="kanban-col">
+            <div class="col-header">
+              <span class="col-title">Done</span>
+              <span class="col-count">{{ getTasksByColumn('Done').length }}</span>
+            </div>
+            <div class="col-cards">
+              <div *ngFor="let t of getTasksByColumn('Done')" class="kanban-card card-completed">
+                <span class="task-badge badge-done">Completed</span>
+                <h4 class="card-title">{{ t.title }}</h4>
+                <small class="text-muted">Total logged: {{ t.loggedHours }}h</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: TIME TRACKER -->
+      <section *ngIf="activeTab === 'time'" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h2>Billable Time Tracker</h2>
+            <p class="subtitle">Log hours with precision and export CSV reports for client billing.</p>
+          </div>
+          <div class="header-actions">
+            <select [(ngModel)]="selectedProjectId" (change)="loadTimeReport()" class="select-input">
+              <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+            </select>
+            <a *ngIf="selectedProjectId" [href]="api.exportTimeCsvUrl(selectedProjectId)" class="btn btn-outline" target="_blank">
+              📥 Export CSV
+            </a>
+          </div>
+        </div>
+
+        <!-- Log Time Form -->
+        <div class="panel form-panel">
+          <h3>Log Time Entry</h3>
+          <div class="time-form-grid">
+            <div class="form-group">
+              <label>Select Task</label>
+              <select [(ngModel)]="timeTaskId" class="select-input">
+                <option *ngFor="let t of projectTasks" [value]="t.id">{{ t.title }} ({{ t.status }})</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Hours Worked</label>
+              <input type="number" [(ngModel)]="newTimeEntry.hoursWorked" step="0.5" min="0.5" max="24" class="search-input" />
+            </div>
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" [(ngModel)]="newTimeEntry.isBillable" />
+                Billable Work
+              </label>
+            </div>
+            <div class="form-group span-full">
+              <label>Work Summary / Engineering Notes</label>
+              <input type="text" [(ngModel)]="newTimeEntry.notes" placeholder="e.g. Implemented Polly exponential retry policy in payments client..." class="search-input" />
+            </div>
+          </div>
+          <button class="btn btn-primary" (click)="logTime()">Save Time Entry</button>
+        </div>
+
+        <!-- Time Summary & Report -->
+        <div *ngIf="timeReport" class="time-report-section">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-title">Total Logged Hours</span>
+              <span class="kpi-value">{{ timeReport.totalHours | number:'1.1-1' }} hrs</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">Billable Hours</span>
+              <span class="kpi-value text-indigo">{{ timeReport.billableHours | number:'1.1-1' }} hrs</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-title">Billable Value</span>
+              <span class="kpi-value text-emerald">${{ timeReport.totalBillableAmount | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Timesheet Activity Log</h3>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Task</th>
+                    <th>Engineer</th>
+                    <th>Hours</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let e of timeReport.entries">
+                    <td>{{ e.dateUtc | date:'yyyy-MM-dd' }}</td>
+                    <td><strong>{{ e.taskTitle }}</strong></td>
+                    <td>{{ e.userName }}</td>
+                    <td><strong>{{ e.hoursWorked }}h</strong></td>
+                    <td>
+                      <span class="badge-pill" [class.badge-billable]="e.isBillable" [class.badge-nonbillable]="!e.isBillable">
+                        {{ e.isBillable ? 'Billable' : 'Non-Billable' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="status-pill status-{{ e.isInvoiced ? 'paid' : 'draft' }}">
+                        {{ e.isInvoiced ? 'Billed' : 'Unbilled' }}
+                      </span>
+                    </td>
+                    <td><small>{{ e.notes || '—' }}</small></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: INVOICES -->
+      <section *ngIf="activeTab === 'invoices'" class="tab-view">
+        <div class="view-header">
+          <div>
+            <h2>Invoicing & Billing</h2>
+            <p class="subtitle">Draft, dispatch, and track international payments with multi-currency support.</p>
+          </div>
+          <div class="header-actions">
+            <a [href]="api.exportInvoicesCsvUrl()" class="btn btn-outline" target="_blank">📥 Export Invoices CSV</a>
+            <button class="btn btn-primary" (click)="showInvoiceModal = true">+ New Invoice</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Client</th>
+                  <th>Project</th>
+                  <th>Issue / Due Date</th>
+                  <th>Subtotal</th>
+                  <th>Tax</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let inv of invoices">
+                  <td><strong>{{ inv.invoiceNumber }}</strong></td>
+                  <td>{{ inv.clientName }}</td>
+                  <td>{{ inv.projectName || 'General Retainer' }}</td>
+                  <td>{{ inv.issueDateUtc | date:'yyyy-MM-dd' }} <br><small class="text-muted">Due: {{ inv.dueDateUtc | date:'yyyy-MM-dd' }}</small></td>
+                  <td>{{ inv.subTotal | number:'1.2-2' }} {{ inv.currency }}</td>
+                  <td>{{ inv.taxAmount | number:'1.2-2' }} <small>({{ inv.taxRatePercentage }}%)</small></td>
+                  <td><strong>{{ inv.totalAmount | number:'1.2-2' }} {{ inv.currency }}</strong></td>
+                  <td>
+                    <span class="status-pill status-{{ inv.status.toLowerCase() }}">{{ inv.status }}</span>
+                  </td>
+                  <td>
+                    <div class="btn-group">
+                      <button *ngIf="inv.status === 'Draft'" class="btn btn-sm btn-outline" (click)="markInvoiceSent(inv)">Mark Sent</button>
+                      <button *ngIf="inv.status === 'Sent' || inv.status === 'Draft'" class="btn btn-sm btn-success" (click)="markInvoicePaid(inv)">Mark Paid</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: ADD CLIENT -->
+  <div *ngIf="showClientModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Client</h3>
+        <button class="btn-close" (click)="showClientModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Client / Brand Name *</label>
+          <input type="text" [(ngModel)]="newClient.name" class="search-input" placeholder="e.g. Acme SaaS" />
+        </div>
+        <div class="form-group">
+          <label>Company Legal Entity</label>
+          <input type="text" [(ngModel)]="newClient.companyName" class="search-input" placeholder="e.g. Acme Technologies Inc." />
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" [(ngModel)]="newClient.email" class="search-input" placeholder="billing@acme.com" />
+        </div>
+        <div class="form-group">
+          <label>Currency</label>
+          <select [(ngModel)]="newClient.currency" class="select-input">
+            <option value="USD">USD ($)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="AUD">AUD ($)</option>
+            <option value="CAD">CAD ($)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showClientModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveClient()">Save Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD PROJECT -->
+  <div *ngIf="showProjectModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Project</h3>
+        <button class="btn-close" (click)="showProjectModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Client *</label>
+          <select [(ngModel)]="newProject.clientId" class="select-input">
+            <option value="">-- Select Client --</option>
+            <option *ngFor="let c of clients" [value]="c.id">{{ c.name }} ({{ c.currency }})</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Project Name *</label>
+          <input type="text" [(ngModel)]="newProject.name" class="search-input" placeholder="e.g. Microservices Refactoring" />
+        </div>
+        <div class="form-group">
+          <label>Description / Technical Scope</label>
+          <textarea [(ngModel)]="newProject.description" class="search-input" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Budget Amount</label>
+            <input type="number" [(ngModel)]="newProject.budget" class="search-input" />
+          </div>
+          <div class="form-group">
+            <label>Hourly Rate</label>
+            <input type="number" [(ngModel)]="newProject.hourlyRate" class="search-input" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showProjectModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveProject()">Create Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD TASK -->
+  <div *ngIf="showTaskModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Task</h3>
+        <button class="btn-close" (click)="showTaskModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Task Title *</label>
+          <input type="text" [(ngModel)]="newTask.title" class="search-input" placeholder="e.g. Add SQL Server Connection Resiliency" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea [(ngModel)]="newTask.description" class="search-input" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Priority</label>
+            <select [(ngModel)]="newTask.priority" class="select-input">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estimated Hours</label>
+            <input type="number" [(ngModel)]="newTask.estimatedHours" class="search-input" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showTaskModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE INVOICE -->
+  <div *ngIf="showInvoiceModal" class="modal-backdrop">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3>Create Invoice</h3>
+        <button class="btn-close" (click)="showInvoiceModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Client *</label>
+            <select [(ngModel)]="newInvoice.clientId" class="select-input">
+              <option value="">-- Select Client --</option>
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Project (Optional)</label>
+            <select [(ngModel)]="newInvoice.projectId" class="select-input">
+              <option value="">-- General / Retainer --</option>
+              <option *ngFor="let p of projects" [value]="p.id">{{ p.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Currency</label>
+            <select [(ngModel)]="newInvoice.currency" class="select-input">
+              <option value="USD">USD ($)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="AUD">AUD ($)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tax Rate (%)</label>
+            <input type="number" [(ngModel)]="newInvoice.taxRatePercentage" class="search-input" />
+          </div>
+        </div>
+
+        <h4>Line Items</h4>
+        <div *ngFor="let item of newInvoice.items; let i = index" class="line-item-row">
+          <input type="text" [(ngModel)]="item.description" placeholder="Description of service..." class="search-input flex-3" />
+          <input type="number" [(ngModel)]="item.quantity" placeholder="Qty" class="search-input flex-1" />
+          <input type="number" [(ngModel)]="item.unitPrice" placeholder="Rate" class="search-input flex-1" />
+          <button class="btn btn-sm btn-danger" (click)="removeInvoiceItem(i)">✕</button>
+        </div>
+        <button class="btn btn-sm btn-outline mt-2" (click)="addInvoiceItem()">+ Add Line Item</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showInvoiceModal = false">Cancel</button>
+        <button class="btn btn-primary" (click)="saveInvoice()">Issue Invoice</button>
+      </div>
+    </div>
+  </div>
+</div>
