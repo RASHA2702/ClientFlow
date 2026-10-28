@@ -1,3 +1,4 @@
+using ClientFlow.Application.Common;
 using ClientFlow.Application.Services;
 using ClientFlow.Domain.Interfaces;
 using ClientFlow.Infrastructure.Export;
@@ -12,6 +13,7 @@ public static class DependencyInjection
     {
         // In-memory datastore with development seed data
         services.AddSingleton<InMemoryDataStore>();
+        services.AddSingleton<IIdempotencyStore, InMemoryIdempotencyStore>();
 
         // Repositories
         services.AddScoped<IClientRepository, ClientRepository>();

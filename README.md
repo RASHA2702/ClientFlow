@@ -1,7 +1,7 @@
 # ClientFlow — Client & Project Operations Platform
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
-[![Tests](https://img.shields.io/badge/tests-29%20passed-success)](#)
+[![Tests](https://img.shields.io/badge/tests-38%20passed-success)](#)
 [![Framework](https://img.shields.io/badge/.NET-8.0%20LTS-purple)](#)
 [![Frontend](https://img.shields.io/badge/Angular-16.1-red)](#)
 [![Database](https://img.shields.io/badge/SQL%20Server-LocalDB%20%2F%202022-blue)](#)
@@ -17,8 +17,9 @@ Small and mid-sized software agencies, boutique consultancies, and remote engine
 - Billable time entries are entered days late, resulting in disputes and unbilled work.
 - Invoicing requires manual reconciliation between task trackers, git commit logs, and bank accounts.
 - Clients lack transparent visibility into project milestones, leading to scope creep.
+- Network glitches and double-submissions cause accidental duplicate invoices or double-charges.
 
-**ClientFlow** unifies client management, project workspace delivery, task Kanban tracking, billable timesheets, and multi-currency invoice denomination into a single, auditable platform.
+**ClientFlow** unifies client management, project workspace delivery, task Kanban tracking, billable timesheets, and multi-currency invoice denomination into a single, auditable platform with financial idempotency and rate limiting.
 
 ---
 
@@ -35,6 +36,8 @@ Small and mid-sized software agencies, boutique consultancies, and remote engine
 - **Project Workspaces & Milestones:** Budget tracking, hourly rate configuration, burn-rate telemetry, and deliverable sign-offs.
 - **Workflow Kanban Board:** 5-state lifecycle (`Backlog` → `Todo` → `InProgress` → `Review` → `Done`) with priority categorization (`Urgent`, `High`, `Medium`, `Low`).
 - **Precision Time Logging:** Task-linked billable/non-billable hours tracking with validation guards (preventing entries >24h/day or modifications to invoiced time).
+- **Financial Idempotency Engine:** Protects invoice creation and status mutations against network retries using `Idempotency-Key` headers, in-flight concurrency locks, and replay verification (`X-Idempotency-Replay`).
+- **Sliding-Window Rate Limiting (.NET 8):** Rate limits client traffic to 120 requests/min, returning standard RFC 9457 429 problem details.
 - **Automated Invoicing Engine:** Generates sequential invoices (`INV-YYYY-XXXX`), line-item calculations using commercial `AwayFromZero` midpoint rounding, configurable tax rates, and state safeguards (protecting settled invoices from accidental mutation).
 - **Sanitized CSV Reporting (RFC 4180 & CWE-1236 Defense):** Export timesheets and billing ledgers with formula injection neutralization (`=`, `+`, `-`, `@`, tab, CR prefix neutralization).
 - **Audit Logging:** Immutable audit trail recording state changes, deletions, and financial settlements with actor attribution.
@@ -169,7 +172,7 @@ The test suite runs against all critical business rules:
 Test run for ClientFlow.Tests.dll (.NETCoreApp,Version=v8.0)
 A total of 1 test files matched the specified pattern.
 
-Passed!  - Failed: 0, Passed: 29, Skipped: 0, Total: 29, Duration: 501 ms - ClientFlow.Tests.dll (net8.0)
+Passed!  - Failed: 0, Passed: 38, Skipped: 0, Total: 38, Duration: 820 ms - ClientFlow.Tests.dll (net8.0)
 ```
 
 ### Test Coverage Highlights:
@@ -178,6 +181,9 @@ Passed!  - Failed: 0, Passed: 29, Skipped: 0, Total: 29, Duration: 501 ms - Clie
 - `TimeAndInvoiceTests`: Max 24-hour daily guard, invoice line-item subtotal + tax formula verification, commercial rounding (`AwayFromZero`) half-cent verification, protection against canceling paid invoices.
 - `ClientServiceTests`: Moq verification of audit logging and active project deletion guard.
 - `CsvExportTests`: RFC 4180 format compliance and CWE-1236 formula injection neutralization (`=`, `+`, `-`, `@`, tab).
+- `IdempotencyStoreTests`: Atomic locking, TTL expiration, cache retrieval.
+- `IdempotencyMiddlewareTests`: HTTP mutation intercept, replay cache headers, 400 length guard.
+- `PagedResultTests`: Navigation bounds, total page math, and slice calculation.
 
 ---
 
